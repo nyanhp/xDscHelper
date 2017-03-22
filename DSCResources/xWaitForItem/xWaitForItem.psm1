@@ -9,17 +9,39 @@ function Get-TargetResource
         $Path,
 
         [parameter(Mandatory = $true)]
-        [ValidateSet("Directory","File")]
+        [ValidateSet("Directory", "File")]
         [System.String]
-        $Type
+        $Type,
+
+        [System.UInt64]
+        $Length,
+
+        [System.UInt64]
+        $MinimumLength,
+
+        [System.UInt64]
+        $ChildItemCount,
+
+        [System.UInt64]
+        $MinimumChildItemCount,
+
+        [System.UInt32]
+        $RetryInterval = 10,
+
+        [System.UInt32]
+        $RetryCount = 10,
+
+        [ValidateSet('Present', 'Absent')]
+        [System.String]
+        $Ensure
     )
 
     $returnValue = @{
-    Path = [System.String]::Empty
-    Type = [System.String]::Empty
-    Length = 0
-    ChildItemCount = 0
-    Ensure = [System.String]::Empty
+        Path = [System.String]::Empty
+        Type = [System.String]::Empty
+        Length = 0
+        ChildItemCount = 0
+        Ensure = [System.String]::Empty
     }
 
     Write-Verbose "Finding $path"
@@ -64,7 +86,7 @@ function Set-TargetResource
         $Path,
 
         [parameter(Mandatory = $true)]
-        [ValidateSet("Directory","File")]
+        [ValidateSet("Directory", "File")]
         [System.String]
         $Type,
 
@@ -72,7 +94,13 @@ function Set-TargetResource
         $Length,
 
         [System.UInt64]
+        $MinimumLength,
+
+        [System.UInt64]
         $ChildItemCount,
+
+        [System.UInt64]
+        $MinimumChildItemCount,
 
         [System.UInt32]
         $RetryInterval = 10,
@@ -87,7 +115,7 @@ function Set-TargetResource
 
     Write-Verbose "Looking for $Path"
         
-    while (-not (Test-TargetResource -Path $Path -Type $Type -ChildItemCount $ChildItemCount -Length $Length) -and $RetryCount -gt 0)
+    while (-not (Test-TargetResource @PSBoundParameters) -and $RetryCount -gt 0)
     {
         Write-Verbose "Looking for item '$Path' at '$(Get-Date)' ($RetryCount retries left)"
         
@@ -120,7 +148,7 @@ function Test-TargetResource
         $Path,
 
         [parameter(Mandatory = $true)]
-        [ValidateSet("Directory","File")]
+        [ValidateSet("Directory", "File")]
         [System.String]
         $Type,
 
@@ -128,7 +156,13 @@ function Test-TargetResource
         $Length,
 
         [System.UInt64]
+        $MinimumLength,
+
+        [System.UInt64]
         $ChildItemCount,
+
+        [System.UInt64]
+        $MinimumChildItemCount,
 
         [System.UInt32]
         $RetryInterval = 10,
@@ -140,23 +174,44 @@ function Test-TargetResource
         [System.String]
         $Ensure
     )
+
     Write-Verbose "Testing $path"
-    $item = Get-Item $Path -ErrorAction SilentlyContinue
-    if ((-not $item -and $Ensure -eq 'Present') -or ($item -and $Ensure -eq 'Absent'))
+    $currentValues = Get-TargetResource @PSBoundParameters
+
+    if ($currentValues.Ensure -eq 'Absent' -and $Ensure -eq 'Absent')
     {
-        Write-Verbose "(-not $item -and $Ensure -eq 'Present') $(-not $item -and $Ensure -eq 'Present')"
-        Write-Verbose "($item -and $Ensure -eq 'Absent') $($item -and $Ensure -eq 'Absent')"
-        return $false
+        return $true
+    }
+    
+    if ($Type -eq 'Directory' -and $PSBoundParameters.ContainsKey('MinimumChildItemCount'))
+    {
+        Write-Verbose -Message "Testing for at least $MinimumChildItemCount child items"
+        return ($currentValues.ChildItemCount -ge $MinimumChildItemCount)
     }
 
-    if ($Type -eq 'Directory')
+    if ($Type -eq 'Directory' -and $PSBoundParameters.ContainsKey('MinimumChildItemCount'))
     {
         Write-Verbose "Testing against $ChildItemCount child items"
-        return ($ChildItemCount -eq (Get-ChildItem -Path $Path -Force -Recurse).Count)
-    }
-    else
+        return ($ChildItemCount -eq $currentValues.ChildItemCount)
+    }    
+    
+    if ($Type -eq 'File' -and $PSBoundParameters.ContainsKey('MinimumLength'))
     {
-        Write-Verbose "Testing agains file length $Length"
-        return ($Length -eq $item.Length)
+        Write-Verbose "Testing against minimum file length $MinimumLength"
+        return ($currentValues.Length -ge $MinimumLength)
     }
+
+    if ($Type -eq 'File' -and $PSBoundParameters.ContainsKey('Length'))
+    {
+        Write-Verbose "Testing against file length $Length"
+        return ($Length -eq $currentValues.Length)
+    }
+
+    if($CurrentValues.Ensure -eq 'Present' -and $Ensure -eq 'Present' -and ('MinimumChildItemCount','MinimumChildItemCount','MinimumLength','Length' -notin $PSBoundParameters.Keys))
+    {
+        Write-Verbose -Message "Item is present and no childitemcounts/lengths are being tested."
+        return $true
+    }
+
+    return $false
 }
