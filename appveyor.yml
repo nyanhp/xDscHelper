@@ -46,7 +46,7 @@ deploy_script:
       [System.IO.Compression.ZipFile]::CreateFromDirectory($pwd, $zipFilePath)
 
       # Creating NuGet package artifact
-      New-Nuspec -packageName $env:APPVEYOR_PROJECT_NAME -version $env:APPVEYOR_BUILD_VERSION -author "Jan-Hendrik Peters" -owners "Jan-Hendrik Peters" -licenseUrl "https://github.com/nyanhp/xDscHelper/blob/master/LICENSE" -projectUrl "https://github.com/$($env:APPVEYOR_REPO_NAME)" -packageDescription $env:APPVEYOR_PROJECT_NAME -tags "DesiredStateConfiguration DSC xDscHelper" -destinationPath .
+      New-Nuspec -packageName $env:APPVEYOR_PROJECT_NAME -version "$($env:APPVEYOR_BUILD_VERSION)" -author "Jan-Hendrik Peters" -owners "Jan-Hendrik Peters" -licenseUrl "https://github.com/nyanhp/xDscHelper/blob/master/LICENSE" -projectUrl "https://github.com/$($env:APPVEYOR_REPO_NAME)" -packageDescription $env:APPVEYOR_PROJECT_NAME -tags "DesiredStateConfiguration DSC xDscHelper" -destinationPath .
       nuget pack ".\$($env:APPVEYOR_PROJECT_NAME).nuspec" -outputdirectory .
       $nuGetPackageName = $env:APPVEYOR_PROJECT_NAME + "." + $env:APPVEYOR_BUILD_VERSION + ".nupkg"
       $nuGetPackagePath = (Get-ChildItem $nuGetPackageName).FullName
