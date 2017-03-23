@@ -6,6 +6,7 @@ class xWaitForItem : OMI_BaseResource
     [Required, Description("The type of the target item"), ValueMap{"Directory","File"}, Values{"Directory","File"}] String Type;
     [Write, Description("The exact file length as implemented by System.IO.FileInfo")] Uint64 Length;
     [Write, Description("The minimum file length as implemented by System.IO.FileInfo")] Uint64 MinimumLength;
+    [Write, Description("The exact child item count including all files and folders")] Uint64 ChildItemCount;
     [Write, Description("The minimum child item count including all files and folders")] Uint64 MinimumChildItemCount;
     [Write, Description("Retry count")] Uint32 RetryCount;
     [Write, Description("Retry interval in seconds")] Uint32 RetryInterval;
