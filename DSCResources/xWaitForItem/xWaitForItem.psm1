@@ -132,7 +132,7 @@ function Set-TargetResource
     }
     else
     {
-        Write-Error "Item '$Path' was not present after $($RetryCount) retries and an interval of $($RetryInterval) seconds"
+        Write-Verbose "Item '$Path' was not present after $($RetryCount) retries and an interval of $($RetryInterval) seconds"
     }
 }
 
@@ -189,7 +189,7 @@ function Test-TargetResource
         return ($currentValues.ChildItemCount -ge $MinimumChildItemCount)
     }
 
-    if ($Type -eq 'Directory' -and $PSBoundParameters.ContainsKey('MinimumChildItemCount'))
+    if ($Type -eq 'Directory' -and $PSBoundParameters.ContainsKey('ChildItemCount'))
     {
         Write-Verbose "Testing against $ChildItemCount child items"
         return ($ChildItemCount -eq $currentValues.ChildItemCount)
@@ -201,7 +201,7 @@ function Test-TargetResource
         return ($currentValues.Length -ge $MinimumLength)
     }
 
-    if ($Type -eq 'File' -and $PSBoundParameters.ContainsKey('Length'))
+    if ($Type -eq 'File' -and -$PSBoundParameters.ContainsKey('Length'))
     {
         Write-Verbose "Testing against file length $Length"
         return ($Length -eq $currentValues.Length)
