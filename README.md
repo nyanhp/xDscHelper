@@ -17,4 +17,5 @@ This module requires at least PowerShell v4.0, which ships in Windows 8.1 or Win
 ## Description
 The module xDscHelper contains the following resources:
 
-* xwaitForItem - Allows you to wait for files to reach a specific length or content or for folders reach a specified amount of child items
+* xWaitForItem - Allows you to wait for files to reach a specific length or content or for folders reach a specified amount of child items
+* xMaintenanceWindow - Allows you to specify a maintenance window as a dependency for your resources

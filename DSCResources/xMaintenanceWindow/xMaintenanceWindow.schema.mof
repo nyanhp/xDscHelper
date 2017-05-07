@@ -1,0 +1,9 @@
+
+[ClassVersion("1.0.0.0"), FriendlyName("xMaintenanceWindow")]
+class xMaintenanceWindow : OMI_BaseResource
+{
+    [Key, Description("The start of the schedule. The property TimeOfDay is used for setting the schedule")] DateTime ScheduleStart;
+    [Key, Description("The end of the schedule. The property TimeOfDay is used for setting the schedule")] DateTime ScheduleEnd;
+    [Read, Description("Current system time")] DateTime CurrentTime;
+};
+
