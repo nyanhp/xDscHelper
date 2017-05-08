@@ -1,10 +1,53 @@
 <#
 .SYNOPSIS
+    Returns the nth day of the month
+.PARAMETER Year
+    The year in which we check
+.PARAMETER Month
+    The number of the month in which we check
+.PARAMETER Day
+    The DayOfWeek object which occurrence we want
+.PARAMETER Occurrence
+    The n in nth day of the month
+#>
+function Get-DayOfMonth
+{
+    [CmdletBinding()]
+    param
+    (
+        [System.Int16]
+        $Year,
+
+        [System.int16]
+        $Month,
+
+        [System.DayOfWeek]
+        $Day,
+
+        [System.int16]
+        $Occurrence
+    )
+
+    $firstDayOfMonth = New-Object -TypeName System.DateTime($Year, $Month, 1)
+    $firstOccurrence = $firstDayOfMonth.AddDays((7 - ([int]$firstDayOfMonth.DayOfWeek - [int]$Day)) % 7)
+
+    return $firstOccurrence.AddDays(7 * ($Occurrence - 1))
+}
+
+<#
+.SYNOPSIS
     Gets the current resource status
 .PARAMETER ScheduleStart
     The start of the schedule. The property TimeOfDay is used for setting the schedule
 .PARAMETER ScheduleEnd
     The end of the schedule. The property TimeOfDay is used for setting the schedule
+.PARAMETER ScheduleType
+    The desired schedule. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored.
+    If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month
+.PARAMETER DayOfWeek
+    The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
+.PARAMETER DayOfMonth
+    The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
 #>
 function Get-TargetResource
 {
@@ -18,7 +61,18 @@ function Get-TargetResource
 
         [parameter(Mandatory = $true)]
         [System.DateTime]
-        $ScheduleEnd
+        $ScheduleEnd,
+
+        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [System.String[]]
+        $ScheduleType,
+
+        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [System.String]
+        $DayOfWeek,
+
+        [System.Int16]
+        $DayOfMonth
     )
 
     $returnValue = @{
@@ -30,7 +84,21 @@ function Get-TargetResource
     return $returnValue
 }
 
-
+<#
+.SYNOPSIS
+    Sets the current resource status
+.PARAMETER ScheduleStart
+    The start of the schedule. The property TimeOfDay is used for setting the schedule
+.PARAMETER ScheduleEnd
+    The end of the schedule. The property TimeOfDay is used for setting the schedule
+.PARAMETER ScheduleType
+    The desired schedule. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored.
+    If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month
+.PARAMETER DayOfWeek
+    The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
+.PARAMETER DayOfMonth
+    The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
+#>
 function Set-TargetResource
 {
     [CmdletBinding()]
@@ -42,7 +110,18 @@ function Set-TargetResource
 
         [parameter(Mandatory = $true)]
         [System.DateTime]
-        $ScheduleEnd
+        $ScheduleEnd,
+
+        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [System.String[]]
+        $ScheduleType,
+
+        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [System.String]
+        $DayOfWeek,
+
+        [System.Int16]
+        $DayOfMonth
     )
 
     # Set should throw when in window to cancel processing
@@ -55,9 +134,18 @@ function Set-TargetResource
 
 <#
 .SYNOPSIS
-    Tests the resource status
-.DESCRIPTION
-    Tests the resource status and returns false if the maintenance window is hit so that Set-TargetResource can throw an exception
+    Tests the current resource status
+.PARAMETER ScheduleStart
+    The start of the schedule. The property TimeOfDay is used for setting the schedule
+.PARAMETER ScheduleEnd
+    The end of the schedule. The property TimeOfDay is used for setting the schedule
+.PARAMETER ScheduleType
+    The desired schedule. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored.
+    If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month
+.PARAMETER DayOfWeek
+    The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
+.PARAMETER DayOfMonth
+    The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
 #>
 function Test-TargetResource
 {
@@ -71,23 +159,57 @@ function Test-TargetResource
 
         [parameter(Mandatory = $true)]
         [System.DateTime]
-        $ScheduleEnd
+        $ScheduleEnd,
+
+        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [System.String[]]
+        $ScheduleType,
+
+        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [System.String]
+        $DayOfWeek,
+
+        [System.Int16]
+        $DayOfMonth
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
 
     $now = $currentValues.CurrentTime.TimeOfDay
+    $shouldSkipSet = $true
 
     if ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay)
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on the same day.'
-        return (-not ($now -ge $ScheduleStart.TimeOfDay -and $now -le $ScheduleEnd.TimeOfDay))
+        $shouldSkipSet = (-not ($now -ge $ScheduleStart.TimeOfDay -and $now -le $ScheduleEnd.TimeOfDay))            
     }
     else
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on different days.'
-        return (-not ($now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay))
+        $shouldSkipSet = (-not ($now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay))
     }
+
+    # Logic OR: Never enter set method (i.e return $false) when either argument is $true
+    if ($ScheduleType -eq 'Weekly')
+    {
+        $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.DayOfWeek.ToString() -eq $DayOfWeek)
+    }
+
+    if ($ScheduleType -eq 'Monthly')
+    {
+        if ($PSBoundParameters.ContainsKey('DayOfMonth') -and $PSBoundParameters.ContainsKey('DayOfWeek'))
+        {
+            $dom = Get-DayOfMonth -Year $currentValues.CurrentTime.Year -Month $currentValues.CurrentTime.Month -Day $DayOfWeek -Occurrence $DayOfMonth
+
+            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.Date -eq $dom.Date)
+        }
+        else
+        {
+            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.Day -eq $DayOfMonth)
+        }
+    }    
+
+    return $shouldSkipSet
 }
 
 
