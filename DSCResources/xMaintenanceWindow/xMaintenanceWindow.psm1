@@ -178,6 +178,8 @@ function Test-TargetResource
     $now = $currentValues.CurrentTime.TimeOfDay
     $shouldSkipSet = $true
 
+    Write-Verbose -Message ('Start: {0}, End {1}, Current: {2}' -f $ScheduleStart.TimeOfDay, $ScheduleEnd.TimeOfDay, $now)
+
     if ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay)
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on the same day.'
@@ -192,27 +194,42 @@ function Test-TargetResource
     $addDays = 0
 
     # If we had rollover, compare current date -1 days with reference dates. Otherwise 0 is added.
-    if($now -le $ScheduleEnd.TimeOfDay)
+    if ($now -le $ScheduleEnd.TimeOfDay)
     {
+        Write-Verbose -Message 'We had rollover. Substracting one day from all current values'
         $addDays = -1
     }
 
     # Logic OR: Never enter set method (i.e return $false) when either argument is $true
     if ($ScheduleType -eq 'Weekly')
     {
+        Write-Verbose -Message ('Weekly schedule. Comparing {0} for equality with {1}' -f 
+            $currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString(), $DayOfWeek
+        )
+
         $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString() -eq $DayOfWeek)
     }
 
     if ($ScheduleType -eq 'Monthly')
     {
+        Write-Debug -Message 'Monthly schedule.'
+
         if ($PSBoundParameters.ContainsKey('DayOfMonth') -and $PSBoundParameters.ContainsKey('DayOfWeek'))
         {
             $dom = Get-DayOfMonth -Year $currentValues.CurrentTime.AddDays($addDays).Year -Month $currentValues.CurrentTime.AddDays($addDays).Month -Day $DayOfWeek -Occurrence $DayOfMonth
 
+            Write-Verbose -Message ('Comparing {0} for equality with {1}' -f 
+                $currentValues.CurrentTime.AddDays($addDays).Date,
+                $dom.Date
+            )
             $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Date -eq $dom.Date)
         }
         else
         {
+            Write-Verbose -Message ('Comparing {0} for equality with {1}' -f 
+                $currentValues.CurrentTime.AddDays($addDays).Day,
+                $DayOfMonth
+            )
             $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Day -eq $DayOfMonth)
         }
     }    
