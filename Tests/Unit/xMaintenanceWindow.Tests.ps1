@@ -35,11 +35,12 @@ try
 
     InModuleScope "$($script:DSCResourceName)" {
 
-        Describe "$($script:DSCResourceName) - Test" {
+        Describe "$($script:DSCResourceName) - Daily" {
 
             $testParameters = @{
                 ScheduleStart = [datetime]::Today.AddHours(22)
                 ScheduleEnd = [datetime]::Today.AddHours(6)
+                ScheduleType = 'Daily'
             }
 
             Context 'The current time does not fall within the maintenance window' {
@@ -58,6 +59,97 @@ try
 
                 It "Should throw in Set-TargetResource" {
                     {Set-TargetResource @testParameters} | Should Throw
+                }
+            }
+
+            Assert-VerifiableMocks
+        }
+
+        Describe "$($script:DSCResourceName) - Weekly" {
+
+            $testParameters = @{
+                ScheduleStart = [datetime]::Today.AddHours(22)
+                ScheduleEnd = [datetime]::Today.AddHours(6)
+                ScheduleType = 'Weekly'
+                DayOfWeek = 'Monday'
+            }
+
+            Context 'The current time does not fall within the maintenance window time' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-01 07:00:00'  }
+                It "Should test true" {
+                    Test-TargetResource @testParameters | Should Be $true
+                }
+            }
+
+            Context 'The current time falls within the maintenance window time' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-01 05:00:00'  }
+
+                It "Should return false in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $false
+                }
+
+                It "Should throw in Set-TargetResource" {
+                    {Set-TargetResource @testParameters} | Should Throw
+                }
+            }
+
+            Context 'The current time does not fall within the maintenance window day' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-02 07:00:00'  }
+                It "Should test true" {
+                    Test-TargetResource @testParameters | Should Be $true
+                }
+            }
+
+            Assert-VerifiableMocks
+        }
+
+        Describe "$($script:DSCResourceName) - Monthly" {
+
+            $testParameters = @{
+                ScheduleStart = [datetime]::Today.AddHours(22)
+                ScheduleEnd = [datetime]::Today.AddHours(6)
+                ScheduleType = 'Monthly'
+                DayOfMonth = 3
+            }
+
+            $testParameters2 = $testParameters.Clone()
+            $testParameters2.Add('DayOfWeek', 'Wednesday')
+
+            Context 'The current time does not fall within the maintenance window' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-04 05:00:00'  }
+                It "Should test true" {
+                    Test-TargetResource @testParameters | Should Be $true
+                }
+            }
+
+            Context 'The current time falls within the maintenance window' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-03 05:00:00'  }
+
+                It "Should return false in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $false
+                }
+
+                It "Should throw in Set-TargetResource" {
+                    {Set-TargetResource @testParameters} | Should Throw
+                }
+            }
+
+            Context 'The current time does not fall within the maintenance window day of month' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-04 05:00:00'  }
+                It "Should test true" {
+                    Test-TargetResource @testParameters2 | Should Be $true
+                }
+            }
+
+            Context 'The current time falls within the maintenance window day of month' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-17 05:00:00'  }
+
+                It "Should return false in Test-TargetResource" {
+                    Test-TargetResource @testParameters2 | Should Be $false
+                }
+
+                It "Should throw in Set-TargetResource" {
+                    {Set-TargetResource @testParameters2} | Should Throw
                 }
             }
 
