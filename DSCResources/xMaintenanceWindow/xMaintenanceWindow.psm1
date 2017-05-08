@@ -189,23 +189,31 @@ function Test-TargetResource
         $shouldSkipSet = (-not ($now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay))
     }
 
+    $addDays = 0
+
+    # If we had rollover, compare current date -1 days with reference dates. Otherwise 0 is added.
+    if($now -le $ScheduleEnd.TimeOfDay)
+    {
+        $addDays = -1
+    }
+
     # Logic OR: Never enter set method (i.e return $false) when either argument is $true
     if ($ScheduleType -eq 'Weekly')
     {
-        $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.DayOfWeek.ToString() -eq $DayOfWeek)
+        $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString() -eq $DayOfWeek)
     }
 
     if ($ScheduleType -eq 'Monthly')
     {
         if ($PSBoundParameters.ContainsKey('DayOfMonth') -and $PSBoundParameters.ContainsKey('DayOfWeek'))
         {
-            $dom = Get-DayOfMonth -Year $currentValues.CurrentTime.Year -Month $currentValues.CurrentTime.Month -Day $DayOfWeek -Occurrence $DayOfMonth
+            $dom = Get-DayOfMonth -Year $currentValues.CurrentTime.AddDays($addDays).Year -Month $currentValues.CurrentTime.AddDays($addDays).Month -Day $DayOfWeek -Occurrence $DayOfMonth
 
-            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.Date -eq $dom.Date)
+            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Date -eq $dom.Date)
         }
         else
         {
-            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.Day -eq $DayOfMonth)
+            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Day -eq $DayOfMonth)
         }
     }    
 
