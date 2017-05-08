@@ -22,9 +22,9 @@ function Get-TargetResource
     )
 
     $returnValue = @{
-    ScheduleStart = $ScheduleStart
-    ScheduleEnd = $ScheduleEnd
-    CurrentTime = Get-Date
+        ScheduleStart = $ScheduleStart
+        ScheduleEnd = $ScheduleEnd
+        CurrentTime = Get-Date
     }
 
     return $returnValue
@@ -47,13 +47,18 @@ function Set-TargetResource
 
     # Set should throw when in window to cancel processing
     $currentValues = Get-TargetResource @PSBoundParameters
-    Write-Verbose -Message ('Nothing to set. Maintenance window start: {0}, maintenance window end: {1}. Current time {2}' -f
-        $ScheduleStart, $ScheduleEnd, $currentValues.CurrentTime)
+    Write-Verbose -Message ('Nothing to set. Maintenance window start: {0}, maintenance window end: {1}. Current time {2}' -f 
+        $ScheduleStart.TimeOfDay, $ScheduleEnd.TimeOfDay, $currentValues.CurrentTime)
 
-        throw 'Hit maintenance schedule. Aborting Set-TargetResource to trigger dependecies'
+    throw 'Hit maintenance schedule. Aborting Set-TargetResource to trigger dependecies'
 }
 
-
+<#
+.SYNOPSIS
+    Tests the resource status
+.DESCRIPTION
+    Tests the resource status and returns false if the maintenance window is hit so that Set-TargetResource can throw an exception
+#>
 function Test-TargetResource
 {
     [CmdletBinding()]
@@ -70,7 +75,19 @@ function Test-TargetResource
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
-    return ($currentValues.CurrentTime.TimeOfDay -ge $ScheduleStart.TimeOfDay -and $currentValues.CurrentTime.TimeOfDay -le $ScheduleEnd.TimeOfDay)
+
+    $now = $currentValues.CurrentTime.TimeOfDay
+
+    if ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay)
+    {
+        Write-Verbose -Message 'Timespans for start and end appear to be on the same day.'
+        return (-not ($now -ge $ScheduleStart.TimeOfDay -and $now -le $ScheduleEnd.TimeOfDay))
+    }
+    else
+    {
+        Write-Verbose -Message 'Timespans for start and end appear to be on different days.'
+        return (-not ($now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay))
+    }
 }
 
 
