@@ -63,11 +63,11 @@ function Get-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [ValidateSet('Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
-        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [ValidateSet('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')]
         [System.String]
         $DayOfWeek,
 
@@ -112,11 +112,11 @@ function Set-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [ValidateSet('Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
-        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [ValidateSet('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')]
         [System.String]
         $DayOfWeek,
 
@@ -161,16 +161,18 @@ function Test-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet("Daily", "Weekly", "Monthly")]
+        [ValidateSet('Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
-        [ValidateSet("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")]
+        [ValidateSet('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')]
         [System.String]
         $DayOfWeek,
 
         [System.Int16]
         $DayOfMonth
+
+        #Reccuring
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
