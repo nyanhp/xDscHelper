@@ -6,12 +6,14 @@ configuration TestMaintenance
 
     node XCASQL1
     {
+        # Default type once
         xMaintenanceWindow mw
         {
             ScheduleStart = (Get-Date).AddHours(-1)
             ScheduleEnd = (Get-Date).AddHours(2)
         }        
 
+        # Default type once
         xMaintenanceWindow mw1
         {
             ScheduleStart = (Get-Date).AddHours(1)
