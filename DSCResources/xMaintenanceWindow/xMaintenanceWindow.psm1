@@ -205,7 +205,7 @@ function Test-TargetResource
     $addDays = 0
 
     # If we had rollover, compare current date -1 days with reference dates. Otherwise 0 is added.
-    if ($now -le $ScheduleEnd.TimeOfDay)
+    if ($now -le $ScheduleEnd.TimeOfDay -and ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay) )
     {
         Write-Verbose -Message 'We had rollover. Substracting one day from all current values'
         $addDays = -1
