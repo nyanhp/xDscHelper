@@ -63,7 +63,7 @@ function Get-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet('Daily', 'Weekly', 'Monthly')]
+        [ValidateSet('Once', 'Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
@@ -112,7 +112,7 @@ function Set-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet('Daily', 'Weekly', 'Monthly')]
+        [ValidateSet('Once', 'Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
@@ -161,7 +161,7 @@ function Test-TargetResource
         [System.DateTime]
         $ScheduleEnd,
 
-        [ValidateSet('Daily', 'Weekly', 'Monthly')]
+        [ValidateSet('Once', 'Daily', 'Weekly', 'Monthly')]
         [System.String[]]
         $ScheduleType,
 
@@ -172,7 +172,7 @@ function Test-TargetResource
         [System.Int16]
         $DayOfMonth
 
-        #Reccuring
+        #Reccuring --> typ once
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
@@ -185,12 +185,12 @@ function Test-TargetResource
     if ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay)
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on the same day.'
-        $shouldSkipSet = (-not ($now -ge $ScheduleStart.TimeOfDay -and $now -le $ScheduleEnd.TimeOfDay))            
+        $shouldSkipSet = $now -ge $ScheduleStart.TimeOfDay -and $now -le $ScheduleEnd.TimeOfDay
     }
     else
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on different days.'
-        $shouldSkipSet = (-not ($now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay))
+        $shouldSkipSet = $now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay
     }
 
     $addDays = 0
@@ -209,7 +209,7 @@ function Test-TargetResource
             $currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString(), $DayOfWeek
         )
 
-        $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString() -eq $DayOfWeek)
+        $shouldSkipSet = $shouldSkipSet -and ($currentValues.CurrentTime.AddDays($addDays).DayOfWeek.ToString() -eq $DayOfWeek)
     }
 
     if ($ScheduleType -eq 'Monthly')
@@ -224,7 +224,7 @@ function Test-TargetResource
                 $currentValues.CurrentTime.AddDays($addDays).Date,
                 $dom.Date
             )
-            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Date -eq $dom.Date)
+            $shouldSkipSet = $shouldSkipSet -and ($currentValues.CurrentTime.AddDays($addDays).Date -eq $dom.Date)
         }
         else
         {
@@ -232,7 +232,7 @@ function Test-TargetResource
                 $currentValues.CurrentTime.AddDays($addDays).Day,
                 $DayOfMonth
             )
-            $shouldSkipSet = $shouldSkipSet -or -not ($currentValues.CurrentTime.AddDays($addDays).Day -eq $DayOfMonth)
+            $shouldSkipSet = $shouldSkipSet -and ($currentValues.CurrentTime.AddDays($addDays).Day -eq $DayOfMonth)
         }
     }    
 

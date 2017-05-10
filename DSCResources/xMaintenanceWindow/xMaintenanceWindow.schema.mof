@@ -5,7 +5,7 @@ class xMaintenanceWindow : OMI_BaseResource
     [Key, Description("The start of the schedule. The property TimeOfDay is used for setting the schedule")] DateTime ScheduleStart;
     [Key, Description("The end of the schedule. The property TimeOfDay is used for setting the schedule")] DateTime ScheduleEnd;
     [Read, Description("Current system time")] DateTime CurrentTime;
-    [Write, Description("The desired schedule. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored. If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month"), ValueMap{"Daily","Weekly","Monthly"}, Values{"Daily","Weekly","Monthly"}] String ScheduleType[];
+    [Write, Description("The desired schedule. If the default Once is used, the exact date will be checked. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored. If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month"), ValueMap{"Once", "Daily","Weekly","Monthly"}, Values{"Once", "Daily","Weekly","Monthly"}] String ScheduleType[];
     [Write, Description("The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek") , ValueMap{"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"}, Values{"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"}] String DayOfWeek;
     [Write, Description("The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month")] Sint16 DayOfMonth;
 };

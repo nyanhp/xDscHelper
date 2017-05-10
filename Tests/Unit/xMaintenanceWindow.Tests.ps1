@@ -45,16 +45,16 @@ try
 
             Context 'The current time does not fall within the maintenance window' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-01 07:00:00'  }
-                It "Should test true" {
-                    Test-TargetResource @testParameters | Should Be $true
+                It "Should test false" {
+                    Test-TargetResource @testParameters | Should Be $false
                 }
             }
 
             Context 'The current time falls within the maintenance window' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-01 05:00:00'  }
 
-                It "Should return false in Test-TargetResource" {
-                    Test-TargetResource @testParameters | Should Be $false
+                It "Should return true in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $true
                 }
 
                 It "Should throw in Set-TargetResource" {
@@ -76,8 +76,8 @@ try
 
             Context 'The current time does not fall within the maintenance window time' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-08 07:00:00'  }
-                It "Should test true" {
-                    Test-TargetResource @testParameters | Should Be $true
+                It "Should test false" {
+                    Test-TargetResource @testParameters | Should Be $false
                 }
             }
 
@@ -85,8 +85,8 @@ try
                 # This returns a Tuesday since our schedule is Monday 22:00 - Tuesday 6:00
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-08 05:00:00' }
 
-                It "Should return false in Test-TargetResource" {
-                    Test-TargetResource @testParameters | Should Be $false
+                It "Should return true in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $true
                 }
 
                 It "Should throw in Set-TargetResource" {
@@ -96,8 +96,8 @@ try
 
             Context 'The current time does not fall within the maintenance window day' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-09 05:00:00'  }
-                It "Should test true" {
-                    Test-TargetResource @testParameters | Should Be $true
+                It "Should test false" {
+                    Test-TargetResource @testParameters | Should Be $false
                 }
             }
 
@@ -118,16 +118,16 @@ try
 
             Context 'The current time does not fall within the maintenance window' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-04 07:00:00'  }
-                It "Should test true" {
-                    Test-TargetResource @testParameters | Should Be $true
+                It "Should test false" {
+                    Test-TargetResource @testParameters | Should Be $false
                 }
             }
 
             Context 'The current time falls within the maintenance window' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-03 23:00:00'  }
 
-                It "Should return false in Test-TargetResource" {
-                    Test-TargetResource @testParameters | Should Be $false
+                It "Should return true in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $true
                 }
 
                 It "Should throw in Set-TargetResource" {
@@ -137,16 +137,16 @@ try
 
             Context 'The current time does not fall within the maintenance window day of month' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-04 05:00:00'  }
-                It "Should test true" {
-                    Test-TargetResource @testParameters2 | Should Be $true
+                It "Should test false" {
+                    Test-TargetResource @testParameters2 | Should Be $false
                 }
             }
 
             Context 'The current time falls within the maintenance window day of month' {
                 Mock -CommandName Get-Date -MockWith { [System.DateTime] '0002-01-17 05:00:00'  }
 
-                It "Should return false in Test-TargetResource" {
-                    Test-TargetResource @testParameters2 | Should Be $false
+                It "Should return true in Test-TargetResource" {
+                    Test-TargetResource @testParameters2 | Should Be $true
                 }
 
                 It "Should throw in Set-TargetResource" {
