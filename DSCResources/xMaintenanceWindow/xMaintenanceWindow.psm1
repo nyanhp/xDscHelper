@@ -129,7 +129,7 @@ function Set-TargetResource
     Write-Verbose -Message ('Nothing to set. Maintenance window start: {0}, maintenance window end: {1}. Current time {2}' -f 
         $ScheduleStart.TimeOfDay, $ScheduleEnd.TimeOfDay, $currentValues.CurrentTime)
 
-    throw 'Hit maintenance schedule. Aborting Set-TargetResource to trigger dependecies'
+    throw 'Outside of maintenance schedule. Aborting Set-TargetResource to trigger dependecies'
 }
 
 <#
@@ -171,8 +171,6 @@ function Test-TargetResource
 
         [System.Int16]
         $DayOfMonth
-
-        #Reccuring --> typ once
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
@@ -191,6 +189,17 @@ function Test-TargetResource
     {
         Write-Verbose -Message 'Timespans for start and end appear to be on different days.'
         $shouldSkipSet = $now -ge $ScheduleStart.TimeOfDay -or $now -le $ScheduleEnd.TimeOfDay
+    }
+
+    if ($ScheduleType -eq 'Once')
+    {
+        Write-Verbose -Message ('Schedule is Once, testing if {0} is in maintenance window' -f $currentValues.CurrentTime)
+        $shouldSkipSet = $currentValues.CurrentTime -ge $ScheduleStart -and $currentValues.CurrentTime -le $ScheduleEnd
+    }
+
+    if ($ScheduleType -eq 'Once' -or $ScheduleType -eq 'Daily')
+    {
+        return $shouldSkipSet
     }
 
     $addDays = 0

@@ -1,10 +1,14 @@
 ﻿
 configuration TestMaintenance
 {
+param
+(
+    [string[]]$ComputerName
+)
     Import-DscResource -ModuleName xDscHelper
     Import-DscResource -ModuleName PSDesiredStateConfiguration
 
-    node XCASQL1
+    node $ComputerName
     {
         # Default type once
         xMaintenanceWindow mw
@@ -38,7 +42,7 @@ configuration TestMaintenance
 
         File test
         {
-            DestinationPath = 'C:\IShouldNotBe.here0'
+            DestinationPath = 'C:\IShouldBe.here0'
             Type =  'File'
             DependsOn = '[xMaintenanceWindow]mw'
             Contents = 'mw'
@@ -46,7 +50,7 @@ configuration TestMaintenance
 
         File test1
         {
-            DestinationPath = 'C:\IShouldBe.here1'
+            DestinationPath = 'C:\IShouldNotBe.here1'
             Type =  'File'
             DependsOn = '[xMaintenanceWindow]mw1'
             Contents = 'mw1'
@@ -54,7 +58,7 @@ configuration TestMaintenance
 
         File test2
         {
-            DestinationPath = 'C:\IShouldNotBe.here2'
+            DestinationPath = 'C:\IShouldBe.here2'
             Type =  'File'
             DependsOn = '[xMaintenanceWindow]mw2'
             Contents = 'mw2'
@@ -62,15 +66,15 @@ configuration TestMaintenance
 
         File test3
         {
-            DestinationPath = 'C:\IShouldBe.here3'
+            DestinationPath = 'C:\IShouldNotBe.here3'
             Type =  'File'
             DependsOn = '[xMaintenanceWindow]mw3'
             Contents = 'mw3'
         }
     }
 }
-#$cred = Get-Credential
+$cred = Get-Credential
 
-TestMaintenance
+TestMaintenance -ComputerName CA1
 
 Start-DscConfiguration -Verbose -Wait -Force -Path .\TestMaintenance -Credential $cred
