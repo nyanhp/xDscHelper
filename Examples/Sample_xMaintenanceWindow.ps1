@@ -19,7 +19,7 @@ param
             ScheduleType = 'Once'
         }        
 
-        # Default type once
+        # Type daily, not in window --> Will error during configuraiton
         xMaintenanceWindow mw1
         {
             ScheduleStart = (Get-Date).AddHours(1).AddMinutes(1)
@@ -27,6 +27,7 @@ param
             ScheduleType = 'Daily'
         }        
 
+        # Type weekly, current day. In maintenance window, will create dependent file resource
         xMaintenanceWindow mw2
         {
             ScheduleStart = (Get-Date).AddHours(-1).AddMinutes(2)
@@ -35,9 +36,10 @@ param
             DayOfWeek = (Get-Date).DayOfWeek
         }        
 
+        # Type monthly, 2nd wednesday of the month. Will err any other day...
         xMaintenanceWindow mw3
         {
-            ScheduleStart = (Get-Date).AddHours(1).AddMinutes(3)
+            ScheduleStart = (Get-Date).AddHours(-1).AddMinutes(3)
             ScheduleEnd = (Get-Date).AddHours(2).AddMinutes(3)
             ScheduleType = 'Monthly'
             DayOfWeek = 'Wednesday'
@@ -73,7 +75,7 @@ param
             DestinationPath = 'C:\IShouldNotBe.here3'
             Type =  'File'
             DependsOn = '[xMaintenanceWindow]mw3'
-            Contents = 'mw3'
+            Contents = 'Unless it is the second wednesday of the month'
         }
     }
 }
