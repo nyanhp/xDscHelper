@@ -1,4 +1,5 @@
-﻿
+﻿$machineNames = 'ServerA', 'ServerB'
+
 configuration TestMaintenance
 {
 param
@@ -15,29 +16,32 @@ param
         {
             ScheduleStart = (Get-Date).AddHours(-1)
             ScheduleEnd = (Get-Date).AddHours(2)
+            ScheduleType = 'Once'
         }        
 
         # Default type once
         xMaintenanceWindow mw1
         {
-            ScheduleStart = (Get-Date).AddHours(1)
-            ScheduleEnd = (Get-Date).AddHours(2)
+            ScheduleStart = (Get-Date).AddHours(1).AddMinutes(1)
+            ScheduleEnd = (Get-Date).AddHours(2).AddMinutes(1)
+            ScheduleType = 'Daily'
         }        
 
         xMaintenanceWindow mw2
         {
-            ScheduleStart = (Get-Date).AddHours(-1)
-            ScheduleEnd = (Get-Date).AddHours(2)
+            ScheduleStart = (Get-Date).AddHours(-1).AddMinutes(2)
+            ScheduleEnd = (Get-Date).AddHours(2).AddMinutes(2)
             ScheduleType = 'Weekly'
             DayOfWeek = (Get-Date).DayOfWeek
         }        
 
         xMaintenanceWindow mw3
         {
-            ScheduleStart = (Get-Date).AddHours(1)
-            ScheduleEnd = (Get-Date).AddHours(2)
-            ScheduleType = 'Weekly'
-            DayOfWeek = (Get-Date).DayOfWeek
+            ScheduleStart = (Get-Date).AddHours(1).AddMinutes(3)
+            ScheduleEnd = (Get-Date).AddHours(2).AddMinutes(3)
+            ScheduleType = 'Monthly'
+            DayOfWeek = 'Wednesday'
+            DayOfMonth = 2
         }
 
         File test
@@ -73,8 +77,7 @@ param
         }
     }
 }
-$cred = Get-Credential
 
-TestMaintenance -ComputerName CA1
+TestMaintenance -ComputerName $machineNames
 
-Start-DscConfiguration -Verbose -Wait -Force -Path .\TestMaintenance -Credential $cred
+Start-DscConfiguration -Verbose -Wait -Force -Path .\TestMaintenance
