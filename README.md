@@ -19,3 +19,99 @@ The module xDscHelper contains the following resources:
 
 * xWaitForItem - Allows you to wait for files to reach a specific length or content or for folders reach a specified amount of child items
 * xMaintenanceWindow - Allows you to specify a maintenance window as a dependency for your resources
+
+## Examples
+This example for xWaitForItem waits for a hypothetic configuration file created by another system, process or product which a local service depends on:  
+
+```powershell
+configuration conf
+{
+    Import-DscResource -ModuleName xDscHelper
+
+    node localhost
+    {
+        # Wait for a third party product or another system to create a file you need
+        xWaitForItem configFile
+        {
+            Path = 'C:\ConfigFileFromOtherSystem.ini'
+            Type = 'File'
+            MinimumLength = 1
+        }
+
+        # Use it as a dependency
+        Service myService
+        {
+           Name = 'IniNeedingService'
+           Path = 'C:\Svc\My.exe'
+           DependsOn = '[xWaitForItem]configFile'
+        }
+    }
+}
+```
+
+This example for xWaitForItem waits for a folder to fully replicate it's contents:  
+
+```powershell
+configuration conf
+{
+    Import-DscResource -ModuleName xDscHelper
+
+    node localhost
+    {
+        # Wait for e.g folder replication
+        xWaitForItem folderContents
+        {
+            Path = 'C:\SomeReplicatedFolder'
+            Type = 'Directory'
+            ChildItemCount = 25
+        }
+
+        # Use it as a dependency
+        Service myService
+        {
+           Name = 'FileNeedingService'
+           Path = 'C:\Svc\My.exe'
+           DependsOn = '[xWaitForItem]folderContents'
+        }
+    }
+}
+```
+
+This example for xMaintenanceWindow defines a maintenance window for the second tuesday of each month from 10 pm to 6 am and uses it as a dependency for other resources:  
+
+```powershell
+configuration conf
+{
+    Import-DscResource -ModuleName xDscHelper
+
+    node localhost
+    {
+        xMaintenanceWindow patchday
+        {
+            ScheduleStart = (Get-Date).Date.AddHours(22)
+            ScheduleEnd = (Get-Date).Date.AddHours(6)
+            ScheduleType = 'Monthly'
+            DayOfWeek = 'Tuesday'
+            DayOfMonth = 2
+        }
+
+        Package 1
+        {
+            DependsOn = '[xMaintenanceWindow]patchday'
+            ...
+        }
+
+        Package 2
+        {
+            DependsOn = '[xMaintenanceWindow]patchday'
+            ...
+        }
+
+        Package 3
+        {
+            DependsOn = '[xMaintenanceWindow]patchday'
+            ...
+        }
+    }
+}
+```
