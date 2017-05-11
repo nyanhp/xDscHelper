@@ -19,6 +19,7 @@ The module xDscHelper contains the following resources:
 
 * xWaitForItem - Allows you to wait for files to reach a specific length or content or for folders reach a specified amount of child items
 * xMaintenanceWindow - Allows you to specify a maintenance window as a dependency for your resources
+ * **Warning**: This will screw up your reporting unless you can exclude the xMaintenanceWindow resources. xMaintenanceWindow throws an error in the Set-TargetResource operation in order to stop dependecy processing. This means: Your configuration cannot be applied.
 
 ## Examples
 This example for xWaitForItem waits for a hypothetic configuration file created by another system, process or product which a local service depends on:  
