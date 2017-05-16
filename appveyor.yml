@@ -11,6 +11,9 @@ install:
         Pop-Location
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
         Install-Module -Name Pester -Repository PSGallery -Force
+environment:
+  apikey:
+    secure: OX4AxdrgR7cWD+b3x/ZcjN87ij7UM1+HYsd/L3CJKxAkJ2ZEX3lIgvWDuoTMcKNM
 #---------------------------------#
 #      build configuration        #
 #---------------------------------#
@@ -44,6 +47,12 @@ deploy_script:
       $zipFilePath = Join-Path $stagingDirectory "$(Split-Path $pwd -Leaf).zip"
       Add-Type -assemblyname System.IO.Compression.FileSystem
       [System.IO.Compression.ZipFile]::CreateFromDirectory($pwd, $zipFilePath)
+
+      # Deploy!
+      if ( $env:APPVEYOR_REPO_BRANCH -eq 'master' )
+      {
+        Publish-Module -Path $pwd -NuGetApiKey $env:apikey -Verbose
+      }
 
       # Creating NuGet package artifact
       New-Nuspec -packageName $env:APPVEYOR_PROJECT_NAME -version "$($env:APPVEYOR_BUILD_VERSION)" -author "Jan-Hendrik Peters" -owners "Jan-Hendrik Peters" -licenseUrl "https://github.com/nyanhp/xDscHelper/blob/master/LICENSE" -projectUrl "https://github.com/$($env:APPVEYOR_REPO_NAME)" -packageDescription $env:APPVEYOR_PROJECT_NAME -tags "DesiredStateConfiguration DSC xDscHelper" -destinationPath .
