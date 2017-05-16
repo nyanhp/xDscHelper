@@ -8,5 +8,6 @@ class xMaintenanceWindow : OMI_BaseResource
     [Write, Description("The desired schedule. If the default Once is used, the exact date will be checked. If Daily is specified, DayOfWeek, DayOfMonth and DayNameOfMonth are ignored. If Weekly is specified, DayOfMonth is ignored. If Monthly is specified, DayOfWeek can be used to express nth Monday of the month"), ValueMap{"Once", "Daily","Weekly","Monthly"}, Values{"Once", "Daily","Weekly","Monthly"}] String ScheduleType[];
     [Write, Description("The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek") , ValueMap{"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"}, Values{"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"}] String DayOfWeek;
     [Write, Description("The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month")] Sint16 DayOfMonth;
+    [Write, Description("The script block to generate a schedule from an external system, e.g. a CMDB, a file, the moon phase, ... Needs to return a hash table with the keys ScheduleStart and ScheduleEnd. Can optionally contain all parameters of the DSC resource except ScriptBlock to further control resource processing. If ScriptBlock is used, all parameters are ignored.")] String ScriptBlock;
 };
 

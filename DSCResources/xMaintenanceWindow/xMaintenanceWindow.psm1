@@ -48,6 +48,10 @@ function Get-DayOfMonth
     The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
 .PARAMETER DayOfMonth
     The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
+.PARAMETER ScriptBlock
+    The script block to generate a schedule from an external system, e.g. a CMDB, a file, the moon phase, ... Needs to return a hash table with the keys
+    ScheduleStart and ScheduleEnd. Can optionally contain all parameters of the DSC resource except ScriptBlock to further control resource processing.
+    If ScriptBlock is used, all parameters are ignored.
 #>
 function Get-TargetResource
 {
@@ -72,13 +76,16 @@ function Get-TargetResource
         $DayOfWeek,
 
         [System.Int16]
-        $DayOfMonth
+        $DayOfMonth,
+
+        [System.String]
+        $ScriptBlock
     )
 
     $returnValue = @{
         ScheduleStart = $ScheduleStart
-        ScheduleEnd = $ScheduleEnd
-        CurrentTime = Get-Date
+        ScheduleEnd   = $ScheduleEnd
+        CurrentTime   = Get-Date
     }
 
     return $returnValue
@@ -98,6 +105,10 @@ function Get-TargetResource
     The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
 .PARAMETER DayOfMonth
     The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
+.PARAMETER ScriptBlock
+    The script block to generate a schedule from an external system, e.g. a CMDB, a file, the moon phase, ... Needs to return a hash table with the keys
+    ScheduleStart and ScheduleEnd. Can optionally contain all parameters of the DSC resource except ScriptBlock to further control resource processing.
+    If ScriptBlock is used, all parameters are ignored.
 #>
 function Set-TargetResource
 {
@@ -121,7 +132,10 @@ function Set-TargetResource
         $DayOfWeek,
 
         [System.Int16]
-        $DayOfMonth
+        $DayOfMonth,
+
+        [System.String]
+        $ScriptBlock
     )
 
     # Set should throw when in window to cancel processing
@@ -146,6 +160,10 @@ function Set-TargetResource
     The day the maintenance window is defined for. ScheduleEnd can exceed the DayOfWeek
 .PARAMETER DayOfMonth
     The nth day of a month. In conjunction with DayOfWeek uses e.g. the nth Monday of the month
+.PARAMETER ScriptBlock
+    The script block to generate a schedule from an external system, e.g. a CMDB, a file, the moon phase, ... Needs to return a hash table with the keys
+    ScheduleStart and ScheduleEnd. Can optionally contain all parameters of the DSC resource except ScriptBlock to further control resource processing.
+    If ScriptBlock is used, all parameters are ignored.
 #>
 function Test-TargetResource
 {
@@ -170,7 +188,10 @@ function Test-TargetResource
         $DayOfWeek,
 
         [System.Int16]
-        $DayOfMonth
+        $DayOfMonth,
+
+        [System.String]
+        $ScriptBlock
     )
 
     $currentValues = Get-TargetResource @PSBoundParameters
@@ -179,6 +200,52 @@ function Test-TargetResource
     $shouldSkipSet = $true
 
     Write-Verbose -Message ('Start: {0}, End {1}, Current: {2}' -f $ScheduleStart.TimeOfDay, $ScheduleEnd.TimeOfDay, $now)
+
+    if (-not [System.String]::IsNullOrWhiteSpace($ScriptBlock))
+    {
+        try
+        {
+            $executableScriptBlock = [scriptblock]::Create($ScriptBlock)
+            $externalValues = $executableScriptBlock.Invoke()
+
+            if ($externalValues.Count -gt 1)
+            {
+                throw 'More than one object has been returned from the external script block.'
+            }
+
+            if (-not ($externalValues[0].ContainsKey('ScheduleStart') -and $externalValues[0].ContainsKey('ScheduleEnd')))
+            {
+                throw 'Mandatory keys ScheduleStart and ScheduleEnd are missing'
+            }
+
+            $ScheduleStart = $externalValues[0].ScheduleStart
+            $ScheduleEnd = $externalValues[0].ScheduleEnd
+
+            if ($externalValues[0].ContainsKey('ScheduleType'))
+            {
+                $ScheduleType = $externalValues[0].ScheduleType
+            }
+            
+            if ($externalValues[0].ContainsKey('DayOfWeek'))
+            {
+                $DayOfWeek = $externalValues[0].DayOfWeek
+            }
+
+            if ($externalValues[0].ContainsKey('DayOfMonth'))
+            {
+                $DayOfMonth = $externalValues[0].DayOfMonth
+            }
+
+            $Message = "External script returned the following key-value-pairs:`r`n{0}" -f (($externalValues[0].GetEnumerator() | ForEach-Object {"$($_.Key): $($_.Value)"} ) -join "`r`n") 
+            Write-Verbose -Message $Message
+        }
+        catch
+        {
+            Write-Error -Message 'Could not create/execute script block from parameter value.' `
+                -TargetObject $ScriptBlock `
+                -RecommendedAction 'Load the script block into an editor of your choice and look for syntax errors.'
+        }
+    }
 
     if ($ScheduleStart.TimeOfDay -le $ScheduleEnd.TimeOfDay)
     {
