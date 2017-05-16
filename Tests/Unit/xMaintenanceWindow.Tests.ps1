@@ -185,6 +185,38 @@ try
 
             Assert-VerifiableMocks
         }
+
+        Describe "$($script:DSCResourceName) - ScriptBlock" {
+            $testParameters = @{
+                ScheduleStart = (Get-Date).AddHours(-1)
+                ScheduleEnd = (Get-Date).AddHours(1)
+                ScriptBlock = "@{
+                    ScheduleStart = [datetime]::Now.AddHours(-1)
+                    ScheduleEnd = [datetime]::Now.AddHours(1)
+                    ScheduleType = 'Daily'
+                }"
+            }
+
+            Context 'The current time does not fall within the maintenance window' {
+                Mock -CommandName Get-Date -MockWith { [System.DateTime] '0001-01-01 07:00:00'  }
+                It "Should test false" {
+                    Test-TargetResource @testParameters | Should Be $false
+                }
+            }
+
+            Context 'The current time falls within the maintenance window' {
+
+                It "Should return true in Test-TargetResource" {
+                    Test-TargetResource @testParameters | Should Be $true
+                }
+
+                It "Should throw in Set-TargetResource" {
+                    {Set-TargetResource @testParameters} | Should Throw
+                }
+            }
+
+            Assert-VerifiableMocks
+        }
     }
 }
 finally

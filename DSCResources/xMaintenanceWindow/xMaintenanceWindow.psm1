@@ -237,7 +237,7 @@ function Test-TargetResource
             }
 
             $Message = "External script returned the following key-value-pairs:`r`n{0}" -f (($externalValues[0].GetEnumerator() | ForEach-Object {"$($_.Key): $($_.Value)"} ) -join "`r`n") 
-            Write-Verbose -Message $Message -Verbose
+            Write-Verbose -Message $Message
         }
         catch
         {
