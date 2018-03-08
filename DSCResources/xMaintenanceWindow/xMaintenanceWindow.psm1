@@ -208,6 +208,8 @@ function Test-TargetResource
             $executableScriptBlock = [scriptblock]::Create($ScriptBlock)
             $externalValues = $executableScriptBlock.Invoke()
 
+            Write-Verbose -Message 'Custom Script block present'
+
             if ($externalValues.Count -gt 1)
             {
                 throw 'More than one object has been returned from the external script block.'
